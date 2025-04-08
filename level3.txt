@@ -1,0 +1,23 @@
+Tile RockBL   0 0	13 0 	1 1
+Tile RockBM   0 0	14 0	1 1
+Tile RockBM   0 0	15 0	1 1
+Tile RockBM   0 0	16 0	1 1
+Tile RockBM   0 0	17 0	1 1
+Tile RockBM   0 0	18 0	1 1
+Tile RockBM   0 0	19 0	1 1
+Tile RockBM   0 0	3 2 	1 1
+Tile RockBM   0 0	3 3 	1 1
+Tile RockBM   0 0	4 2 	1 1
+Tile RockBM   0 0	5 2 	1 1
+Tile RockBM   0 0	5 3 	1 1
+Tile RockBL   0 0	2 3 	1 1
+Tile RockBM   0 0	0 11 	1 1
+Tile RockBM   0 0	1 11 	1 1
+Tile RockBM   0 0	2 11 	1 1
+Tile RockBM   0 0	3 11 	1 1
+Tile RockBM   0 0	4 11 	1 1
+Tile RockBM   0 0	5 11	1 1
+Tile RockBM   0 0	6 11	1 1
+Tile RockBM   0 0	7 11 	1 1
+Tile RockBM   0 0	8 11	1 1
+Player 640 360 48 48 5 3

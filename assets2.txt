@@ -1,0 +1,20 @@
+Texture		TexStandD	images/tloz/stand_down.png
+Texture		TexStandR	images/tloz/stand_right.png
+Texture		TexStandU	images/tloz/stand_up.png
+Texture		TexRunRight	images/tloz/run_right.png
+Texture		TexRunUp	images/tloz/run_up.png
+Texture		TexRunDown	images/tloz/run_down.png
+Texture		TexRockBM	images/tloz/green/tile_rock_bm.png
+Texture		TexRockBL	images/tloz/green/tile_rock_bl.png
+Animation	StandDown	TexStandD	1	0
+Animation	StandRight	TexStandR	1	0
+Animation	StandUp		TexStandU	1	0
+Animation	RunDown		TexRunDown	2	15
+Animation	RunRight	TexRunRight	2	15
+Animation	RunUp		TexRunUp	2	15
+Animation	RockBM		TexRockBM	1	0
+Animation	RockBL		TexRockBL	1	0
+Sound		MusicTitle	sounds/title.ogg
+Font		Mario		fonts/mario.ttf
+Font 		Megaman		fonts/megaman.ttf
+Font 		Tech		fonts/tech.ttf
