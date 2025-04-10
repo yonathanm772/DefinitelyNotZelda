@@ -9,7 +9,7 @@
 class Scene_Zelda : public Scene
 {
 	struct PlayerConfig {
-		float X, Y, CX, CY, SPEED,HEALTH;
+		float ROOMX,ROOMY,X, Y, CX, CY, SPEED,HEALTH;
 		std::string WEAPON;
 	};
 
@@ -30,8 +30,10 @@ protected:
 	bool						m_drawGrid = false;
 	bool						m_follow = false;
 	const Vec2					m_gridSize = { 64, 64 };
+	const Vec2					m_roomSize = { 20, 12 };
 	sf::Text					m_gridText;
 	Vec2						m_mPos;
+	Vec2						m_room = { 0, 0 };
 	sf::CircleShape				m_mouseShape;
 
 	void init(const std::string& levelPath);

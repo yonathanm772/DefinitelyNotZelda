@@ -83,30 +83,13 @@ void Scene_Zelda::loadLevel(const std::string& filename)
 			auto tile = m_entityManager.addEntity("tile");
 			//IMPORTANT: always add the CAnimation component first so that gridToMidPixel can compute correctly
 			tile->addComponent<CAnimation>(m_game->assets().getAnimation(asset), true);
-			tile->addComponent<CTransform>(gridToMidPixel(posX, posY, tile));
-			//tile->addComponent<CTransform>(Vec2(posX, posY));
+			tile->addComponent<CTransform>(getPosition(roomX,roomY,posX,posY));
 			tile->addComponent<CBoundingBox>(m_game->assets().getAnimation(asset).getSize(), blocksM, blocksV);
 			tile->addComponent<CDraggable>();
-			//NOTE: Your final code should position the entity with the grid x,y position rtead from the file:
 
 		}
-		/*else if (assetType == "Dec") {
-
-			fin >> asset >> xCoord >> yCoord;
-
-			auto dec = m_entityManager.addEntity("dec");
-			//IMPORTANT: always add the CAnimation component first so that gridToMidPixel can compute correctly
-			dec->addComponent<CAnimation>(m_game->assets().getAnimation(asset), true);
-			dec->addComponent<CTransform>(gridToMidPixel(xCoord, yCoord, dec));
-			std::cout << "+++++++++++++++DEC NAME: " << dec->getComponent<CAnimation>().animation.getName() << "\n";
-			std::cout << "+++++++++++++++DEC COORD: " << dec->getComponent<CTransform>().pos.x << ", " << dec->getComponent<CTransform>().pos.y << "\n";
-			dec->addComponent<CDraggable>();
-			//NOTE: Your final code should position the entity with the grid x,y position rtead from the file:
-
-			//std::cout << "Loaded Animation:" << assetPath << "\n";
-		}*/
 		else if (assetType == "Player") {
-			fin >> m_playerConfig.X >> m_playerConfig.Y >> m_playerConfig.CX
+			fin >> m_playerConfig.ROOMX >> m_playerConfig.ROOMY >>m_playerConfig.X >> m_playerConfig.Y >> m_playerConfig.CX
 				>> m_playerConfig.CY >> m_playerConfig.SPEED >> m_playerConfig.HEALTH;
 			spawnPlayer();
 
@@ -127,12 +110,19 @@ void Scene_Zelda::loadLevel(const std::string& filename)
 
 Vec2 Scene_Zelda::getPosition(int rx, int ry, int tx, int ty) const
 {
-	// TODO:
-	// Implement this function, which takes in the room (rx, ry) coordinate
-	// as well as the tile (tx, ty) coordinate, and returns the Vec2 game world
-	// position of the center of the entity
+	// Total tile index in world space
+	int globalTileX = rx * m_roomSize.x + tx;
+	int globalTileY = ry * m_roomSize.y + ty;
 
-	return Vec2(0,0);
+	// Bottom-left corner of that tile in pixels
+	int pixelX = globalTileX * m_gridSize.x;
+	int pixelY = (globalTileY) * m_gridSize.y;
+
+	// Center it
+	float centerX = pixelX + m_gridSize.x / 2.0f;
+	float centerY = pixelY + m_gridSize.y / 2.0f;
+
+	return Vec2(centerX, centerY);
 }
 
 void Scene_Zelda::spawnPlayer()
@@ -141,16 +131,16 @@ void Scene_Zelda::spawnPlayer()
 	std::cout << "Spawning Player:" << "\n";
 	m_player = m_entityManager.addEntity("player");
 	m_player->addComponent<CAnimation>(m_game->assets().getAnimation("StandDown"), true);
-	m_player->addComponent<CTransform>(Vec2(640,393));
+	m_player->addComponent<CTransform>(getPosition(m_playerConfig.ROOMX, m_playerConfig.ROOMX,
+												   m_playerConfig.X, m_playerConfig.Y));
 	m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CX, m_playerConfig.CY), true, false);
 	m_player->addComponent<CHealth>(m_playerConfig.HEALTH, m_playerConfig.HEALTH);
-
-	std::cout << m_player->getComponent<CTransform>().pos.x<< " " << m_player->getComponent<CTransform>().pos.y << "\n";
 }
 
 void Scene_Zelda::spawnSword(std::shared_ptr<Entity> entity)
 {
-	// TODO:
+	// TODO.
+	// 640 360:
 	// Implement the spawning of the sword, which:
 	// - should be given the appropriate lifespan
 	// - should spawn at the appropriate location based on player's facing direction
@@ -290,6 +280,7 @@ void Scene_Zelda::sDoAction(const Action& action)
 
 		if (action.name() == "TOGGLE_TEXTURE")			{ m_drawTextures = !m_drawTextures; }
 		else if (action.name() == "TOGGLE_COLLISION")	{ m_drawCollision = !m_drawCollision; }
+		else if (action.name() == "TOGGLE_FOLLOW")		{ m_follow = !m_follow; }
 		else if (action.name() == "TOGGLE_GRID")		{ m_drawGrid = !m_drawGrid; }
 		else if (action.name() == "PAUSE")				{ m_paused = !m_paused; }
 		else if (action.name() == "QUIT")				{ onEnd(); }
@@ -404,13 +395,13 @@ void Scene_Zelda::sCollision()
 	// May want to use helper functions for these behaviors or this function will get long
 	// like hitBlock();
 
-	//auto& tiles = m_entityManager.getEntities("tile");
-	/*auto& bullets = m_entityManager.getEntities("bullet");
+	auto& tiles = m_entityManager.getEntities("tile");
+	auto& bullets = m_entityManager.getEntities("bullet");
 
 	auto& transform = m_player->getComponent<CTransform>();
 	auto& state = m_player->getComponent<CState>();
 
-	for (auto bullet : bullets)
+	/*for (auto bullet : bullets)
 	{
 		for (auto tile : tiles)
 		{
@@ -430,7 +421,8 @@ void Scene_Zelda::sCollision()
 
 			}
 		}
-	}
+	}*/
+
 	for (auto e : m_entityManager.getEntities("player"))
 	{
 		bool isColliding = false;  // Track if the player collides with any tile
@@ -443,11 +435,11 @@ void Scene_Zelda::sCollision()
 
 			Vec2 shift(0, 0);  // Position correction
 			Vec2 diff = transform.pos - t->getComponent<CTransform>().pos; // Difference in position
-
+			auto& block = t->getComponent<CBoundingBox>();
 			if (overlap.x > 0 && overlap.y > 0)  // Ensure valid collision
 			{
 				isColliding = true;  // Player is colliding with at least one tile
-
+				if (!block.blockMove) { continue; }
 				// Handle different collision directions
 				// bottom collision
 				if (prevOverlap.x > 0 && transform.prevPos.y < t->getComponent<CTransform>().prevPos.y)
@@ -455,9 +447,6 @@ void Scene_Zelda::sCollision()
 
 					transform.pos.y -= overlap.y;
 					transform.velocity.y = 0;
-					//state.state = "ground";
-					state.isGrounded = true;
-					e->getComponent<CInput>().canJump = true;
 
 					// Check if the tile is moving (a platform)
 
@@ -465,13 +454,12 @@ void Scene_Zelda::sCollision()
 				//top collision
 				else if (prevOverlap.x > 0 && transform.prevPos.y > t->getComponent<CTransform>().prevPos.y)
 				{
-					std::cout << "CURRENT STATE: " << state.state << "\n";
 					transform.pos.y += overlap.y;
 					transform.velocity.y = 0;
 
 
 
-					hitBlock(t);
+					//hitBlock(t);
 
 				}
 				// if there was a non-zero previous X overlap, the the collision came from x
@@ -483,26 +471,14 @@ void Scene_Zelda::sCollision()
 				transform.pos += shift;
 			}
 		}
-		// If the player is NOT colliding with anything, set the state to "jumping"
-		if (!isColliding)
-		{
-			state.state = "air";
-		}
 
-	}
-
-	// check to see if the player has fallen down a hole
-	if (m_player->getComponent<CTransform>().pos.y > height())
-	{
-		spawnPlayer();
 	}
 
 	// does not let the player exit the screen to the left
-	if (m_player->getComponent<CTransform>().pos.x < m_player->getComponent<CBoundingBox>().halfSize.x)
+	/*if (m_player->getComponent<CTransform>().pos.x < m_player->getComponent<CBoundingBox>().halfSize.x)
 	{
 		m_player->getComponent<CTransform>().pos.x = m_player->getComponent<CBoundingBox>().halfSize.x;
-	}
-	*/
+	}*/
 
 }
 
@@ -520,7 +496,6 @@ void Scene_Zelda::sAnimation()
 	if (state.state == "runX")
 	{
 		auto& input = m_player->getComponent<CInput>();
-		std::cout << "Left: " << input.left << ", Right: " << input.right << "\n";
 		if ((input.left || input.right) && !(input.left && input.right))
 		{
 			if (currentAnimation.getName() != "RunRight")
@@ -534,18 +509,18 @@ void Scene_Zelda::sAnimation()
 		}
 		else
 		{
-			std::cout << "Facing " << pTransform.facing.x << "\n";
-			std::cout << "Facing " << pTransform.facing.y << "\n";
+			//std::cout << "Facing " << pTransform.facing.x << "\n";
+			//std::cout << "Facing " << pTransform.facing.y << "\n";
 			m_player->addComponent<CAnimation>(m_game->assets().getAnimation("StandRight"), true);
 			m_player->getComponent<CAnimation>().animation.getSprite().setScale(pTransform.facing.x, pTransform.facing.y);
-			std::cout << "Current " << m_player->getComponent<CAnimation>().animation.getSprite().getScale().x << "\n";
-			std::cout << "Current " << m_player->getComponent<CAnimation>().animation.getSprite().getScale().y << "\n";
+			//std::cout << "Current " << m_player->getComponent<CAnimation>().animation.getSprite().getScale().x << "\n";
+			//std::cout << "Current " << m_player->getComponent<CAnimation>().animation.getSprite().getScale().y << "\n";
 		}
 	}
 	else if (state.state == "runUp")
 	{
 		auto& input = m_player->getComponent<CInput>();
-		std::cout << "Up: " << input.up << "\n";
+		//std::cout << "Up: " << input.up << "\n";
 		if ((input.up) && !(input.up && input.down))
 		{
 			if (currentAnimation.getName() != "RunUp")
@@ -560,20 +535,14 @@ void Scene_Zelda::sAnimation()
 		else
 		{
 
-			std::cout << "BOTH\n";
 			auto prevScale = m_player->getComponent<CAnimation>().animation.getSprite();
-			std::cout << "Prev " << prevScale.getScale().x << "\n";
-			std::cout << "Prev " << prevScale.getScale().y << "\n";
 			m_player->addComponent<CAnimation>(m_game->assets().getAnimation("StandUp"), true);
 			m_player->getComponent<CAnimation>().animation.getSprite().setScale(prevScale.getScale());
-			std::cout << "Current " << m_player->getComponent<CAnimation>().animation.getSprite().getScale().x << "\n";
-			std::cout << "Current " << m_player->getComponent<CAnimation>().animation.getSprite().getScale().y << "\n";
 		}
 	}
 	else if (state.state == "runDown")
 	{
 		auto& input = m_player->getComponent<CInput>();
-		std::cout << "Up: " << input.up << "\n";
 		if ((input.down) && !(input.up && input.down))
 		{
 			if (currentAnimation.getName() != "RunDown")
@@ -584,14 +553,11 @@ void Scene_Zelda::sAnimation()
 		else
 		{
 
-			std::cout << "BOTH\n";
+			
 			auto prevScale = m_player->getComponent<CAnimation>().animation.getSprite();
-			std::cout << "Prev " << prevScale.getScale().x << "\n";
-			std::cout << "Prev " << prevScale.getScale().y << "\n";
+			
 			m_player->addComponent<CAnimation>(m_game->assets().getAnimation("StandDown"), true);
 			m_player->getComponent<CAnimation>().animation.getSprite().setScale(prevScale.getScale());
-			std::cout << "Current " << m_player->getComponent<CAnimation>().animation.getSprite().getScale().x << "\n";
-			std::cout << "Current " << m_player->getComponent<CAnimation>().animation.getSprite().getScale().y << "\n";
 		}
 	}
 	else
@@ -680,21 +646,74 @@ void Scene_Zelda::sCamera()
 	// 
 	// Get the current view, which we will modify in the if-statement below
 	//
-	/*
+
+
+
 	sf::View view = m_game->window().getView();
+	auto& pPos = m_player->getComponent<CTransform>().pos;
+	Vec2 pWorldPos = windowToWorld(pPos);
 
 	if (m_follow)
 	{
 		// calculate view for player follow camera
+		view.setCenter(sf::Vector2f(m_player->getComponent<CTransform>().pos.x,
+									m_player->getComponent<CTransform>().pos.y));
 	}
 	else
 	{
+		std::cout << "Player pos: " << pPos.x << "\n";
+		std::cout << "Player pos: " << pPos.y << "\n";
+		
+
+		if (pPos.x > width())
+		{
+			std::cout << "Player Worldpos: " << width() << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.x << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.y << "\n";
+			m_room.x = 1;
+		}
+		else if (pPos.x < width() && pPos.x >= 0)
+		{
+			std::cout << "Player Worldpos: " << width() << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.x << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.y << "\n";
+			m_room.x = 0;
+		}
+		else if (pPos.x < width() && pPos.x <= 0)
+		{
+			std::cout << "Player Worldpos: " << width() << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.x << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.y << "\n";
+			m_room.x = -1;
+		}
+
+		if (pPos.y > height())
+		{
+			std::cout << "Player Worldpos: " << width() << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.x << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.y << "\n";
+			m_room.y = 1;
+		}
+		else if (pPos.y < height() && pPos.y >= 0)
+		{
+			std::cout << "Player Worldpos: " << width() << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.x << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.y << "\n";
+			m_room.y = 0;
+		}
+		else if (pPos.y < height() && pPos.y <= 0)
+		{
+			std::cout << "Player Worldpos: " << width() << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.x << "\n";
+			std::cout << "Player Worldpos: " << pWorldPos.y << "\n";
+			m_room.y = -1;
+		}
 		// calculate view for room-based camera
+		view.reset(sf::FloatRect(m_room.x * width(), m_room.y * height(), width(), height()));
 	}
 
 	// then set the window view
 	m_game->window().setView(view);
-	*/
 }
 
 Vec2 Scene_Zelda::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity)
@@ -1019,3 +1038,4 @@ Vec2 Scene_Zelda::windowToWorld(const Vec2& window) const
 	return Vec2(window.x + worldX, window.y + worldY);
 }
 
+//camera
