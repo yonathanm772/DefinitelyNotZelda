@@ -10,11 +10,6 @@ bool Entity::isActive() const
 	return m_active;
 }
 
-/*bool Entity::hasSpawnedSmallEnemies()
-{
-	return m_hasSpawnedSmallEnemies;
-}*/
-
 const std::string& Entity::tag() const
 {
 	return m_tag;
@@ -29,11 +24,6 @@ void Entity::destroy()
 {
 	m_active = false;
 }
-
-/*void Entity::setSmallEnemySpawned()
-{
-	m_hasSpawnedSmallEnemies = true;
-}*/
 
 
 

@@ -165,6 +165,11 @@ void GameEngine::playSound(const std::string& soundName)
 	m_assets.getSound(soundName).play();
 }
 
+void GameEngine::stopSound(const std::string& soundName)
+{
+	m_assets.getSound(soundName).stop();
+}
+
 void GameEngine::quit()
 {
 	m_running = false;

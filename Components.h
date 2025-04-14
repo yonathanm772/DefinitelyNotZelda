@@ -21,11 +21,11 @@ public:
 class CTransform : public Component
 {
 public:
-	Vec2 pos				= { 0, 0 };
-	Vec2 prevPos			= { 0, 0 };
+	Vec2 pos				= { 0.0, 0.0 };
+	Vec2 prevPos			= { 0.0, 0.0 };
 	Vec2 scale				= { 1.0, 1.0 };
-	Vec2 velocity			= { 0, 0 };
-	Vec2 facing				= { 0, 1.0 }; //1 = facing right, -1 = facing left
+	Vec2 velocity			= { 0.0, 0.0 };
+	Vec2 facing				= { 0.0, 1.0 }; //1 = facing right, -1 = facing left
 	float angle				= 0; 
 	
 	
@@ -84,6 +84,7 @@ public:
 	bool right = false;
 	bool down = false;
 	bool attack = false;
+	bool canAttack = true;
 
 	CInput() {}
 };

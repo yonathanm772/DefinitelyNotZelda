@@ -14,7 +14,8 @@ class Scene_Zelda : public Scene
 	};
 
 	struct EnemyConfig {
-		float X, Y, CX, CY, SPEED, MAXSPEED, GRAVITY;
+		float ROOMX, ROOMY, X, Y, BLOCKM, BLOCKV,HEALTH,DAMAGE;
+		std::string NAME;
 	};
 
 

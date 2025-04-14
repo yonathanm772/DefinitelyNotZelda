@@ -30,6 +30,7 @@ public:
 	void changeScene(const std::string& sceneName, std::shared_ptr<Scene> scene, bool endCurrentScene =
 		false);
 	void playSound(const std::string& soundName);
+	void stopSound(const std::string& soundName);
 	void quit();
 	void run();
 

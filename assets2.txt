@@ -4,6 +4,11 @@ Texture		TexStandU	images/tloz/stand_up.png
 Texture		TexRunRight	images/tloz/run_right.png
 Texture		TexRunUp	images/tloz/run_up.png
 Texture		TexRunDown	images/tloz/run_down.png
+Texture		TexAtkRight	images/tloz/attack_right.png
+Texture		TexAtkDown	images/tloz/attack_down.png
+Texture		TexAtkUp	images/tloz/attack_up.png
+Texture		TexSwordUp	images/tloz/item_sword_up.png
+Texture		TexSwordRight	images/tloz/item_sword_right.png
 Texture		TexRockTL	images/tloz/green/tile_rock_tl.png
 Texture		TexRockTM	images/tloz/green/tile_rock_tm.png
 Texture		TexRockTR	images/tloz/green/tile_rock_tr.png
@@ -27,12 +32,19 @@ Texture		TexTreeBL	images/tloz/green/tile_tree_bl.png
 Texture		TexTreeBR	images/tloz/green/tile_tree_br.png
 Texture		TexBlack	images/tloz/tile_black.png
 Texture		TexHeart	images/tloz/item_heart.png
+Texture		TexTektite	images/tloz/tektite.png
 Animation	StandDown	TexStandD	1	0
 Animation	StandRight	TexStandR	1	0
 Animation	StandUp		TexStandU	1	0
 Animation	RunDown		TexRunDown	2	15
 Animation	RunRight	TexRunRight	2	15
 Animation	RunUp		TexRunUp	2	15
+Animation	Tektite		TexTektite	2	10
+Animation	AtkUp		TexAtkUp	1	0
+Animation	AtkDown		TexAtkDown	1	0
+Animation	AtkRight	TexAtkRight	1	0
+Animation	SwordUp		TexSwordUp	1	0
+Animation	SwordRight	TexSwordRight	1	0
 Animation	Black		TexBlack	1	0
 Animation	RockTL		TexRockTL	1	0
 Animation	RockTM		TexRockTM	1	0
