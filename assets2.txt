@@ -1,3 +1,4 @@
+Texture		TexExplode	images/misc/explosion128.png
 Texture		TexStandD	images/tloz/stand_down.png
 Texture		TexStandR	images/tloz/stand_right.png
 Texture		TexStandU	images/tloz/stand_up.png
@@ -33,6 +34,7 @@ Texture		TexTreeBR	images/tloz/green/tile_tree_br.png
 Texture		TexBlack	images/tloz/tile_black.png
 Texture		TexHeart	images/tloz/item_heart.png
 Texture		TexTektite	images/tloz/tektite.png
+Animation	Explosion	TexExplode	7	2
 Animation	StandDown	TexStandD	1	0
 Animation	StandRight	TexStandR	1	0
 Animation	StandUp		TexStandU	1	0

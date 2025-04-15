@@ -51,7 +51,7 @@ public:
 class CInvincibility : public Component
 {
 public:
-	int iframes = 1;
+	int iframes = 0;
 	CInvincibility() {}
 	CInvincibility(int f)
 		: iframes(f) {}

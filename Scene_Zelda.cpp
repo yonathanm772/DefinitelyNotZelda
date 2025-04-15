@@ -234,7 +234,6 @@ void Scene_Zelda::sMovement()
 	{
 		spawnSword(m_player);
 		state.state = "attacking";
-		input.attack = false;
 		input.canAttack = false;
 	}
 
@@ -370,6 +369,15 @@ void Scene_Zelda::sStatus()
 	// 
 	// whenever the player is not invincible, and it gets hit, attach an invincibility component
 	// for a certain duration
+	auto& iFrames = m_player->getComponent<CInvincibility>().iframes;
+	for (auto e : m_entityManager.getEntities("player"))
+	{
+		if (!e->getComponent<CInvincibility>().has) { continue; };
+		iFrames -= 1;
+		if (iFrames <= 0) { e->removeComponent<CInvincibility>(); };
+
+
+	}
 }
 
 void Scene_Zelda::sCollision()
@@ -380,7 +388,7 @@ void Scene_Zelda::sCollision()
 	// Implement entity - heart collisions and life gain logic
 	// Implement black tile collisions / 'teleporting' tp another black tile
 	// May want to use helper functions for these behaviors or this function will get long
-	// like hitBlock();
+	// 
 
 	auto& tiles = m_entityManager.getEntities("tile");
 	auto& enemies = m_entityManager.getEntities("enemy");
@@ -392,7 +400,6 @@ void Scene_Zelda::sCollision()
 	for (auto sword : swords)
 	{
 		if (!sword->isActive() || !sword->hasComponent<CDamage>()) continue;
-		std::cout << "Spawned sword ID: " << sword->id() << "\n";
 		for (auto enemy : enemies)
 		{
 			if (!enemy->hasComponent<CBoundingBox>()) { continue; }
@@ -400,23 +407,16 @@ void Scene_Zelda::sCollision()
 			Vec2 overlap = Physics::getOverlap(sword, enemy);
 			if (overlap.x > 0 && overlap.y > 0)
 			{
-				
-				std::cout << "Health Before DMG: " << enemy->getComponent<CHealth>().current << "\n";
 				enemy->getComponent<CHealth>().current -= sword->getComponent<CDamage>().damage;
-				std::cout << "Health After DMG: " << enemy->getComponent<CHealth>().current << "\n";
-				std::cout << "Has DMG COMPONENT================================: " << sword->getComponent<CDamage>().has << "\n";
 				sword->removeComponent<CDamage>();
-				std::cout << "Has DMG COMPONENT================================: " << sword->getComponent<CDamage>().has << "\n";
-				std::cout << "Checking sword ID: " << sword->id()
-					<< ", has CDamage: " << sword->hasComponent<CDamage>() << "\n";
-				break;
 
-				/*if (enemy->getComponent<CAnimation>().animation.getName() == "Tektite")
+				if (enemy->getComponent<CAnimation>().animation.getName() == "Tektite" && enemy->getComponent<CHealth>().current <= 0)
 				{
-					tile->addComponent<CAnimation>(m_game->assets().getAnimation("Explosion"), true);
-					tile->removeComponent<CBoundingBox>();
-					tile->getComponent<CAnimation>().repeat = false;
-				}*/
+					enemy->addComponent<CAnimation>(m_game->assets().getAnimation("Explosion"), true);
+					enemy->removeComponent<CHealth>();
+					enemy->removeComponent<CBoundingBox>();
+					enemy->getComponent<CAnimation>().repeat = false;
+				}
 
 			}
 		}
@@ -438,6 +438,29 @@ void Scene_Zelda::sCollision()
 			if (overlap.x > 0 && overlap.y > 0)  // Ensure valid collision
 			{
 				isColliding = true;  // Player is colliding with at least one tile
+				
+				/*if (t->getComponent<CAnimation>().animation.getName() == "Black")
+				{
+					auto &currentTilePos = t->getComponent<CTransform>().pos;
+					//auto& destination = m_entityManager.getEntities(t->getComponent<CAnimation>().animation.getName());
+
+					for (auto d : tiles)
+					{
+						//std::cout << "Tile:" << d-> << "\n";
+						if (d == t) continue; // skip the current tile
+						if (d->getComponent<CAnimation>().animation.getName() == "Black")
+						{
+							auto& destPos = d->getComponent<CTransform>().pos;
+
+							// Optional: Add a cooldown so you don't instantly teleport back
+							transform.pos = destPos;
+							std::cout << "Teleported to tile at " << destPos.x << ", " << destPos.y << "\n";
+							return; // Exit early so you don’t double-teleport in the same frame
+						}
+					}
+				
+				}*/
+
 				if (!block.blockMove) { continue; }
 				// Handle different collision directions
 				// bottom collision
@@ -458,10 +481,6 @@ void Scene_Zelda::sCollision()
 					transform.velocity.y = 0;
 					std::cout << "Velocity in Top collision " << transform.velocity.y << "\n";
 
-
-
-					//hitBlock(t);
-
 				}
 				// if there was a non-zero previous X overlap, the the collision came from x
 				else if (prevOverlap.y > 0)
@@ -477,6 +496,44 @@ void Scene_Zelda::sCollision()
 			}
 		}
 
+		for (auto enemy : enemies)
+		{
+			if (!enemy->hasComponent<CBoundingBox>()) { continue; }
+
+			Vec2 overlap = Physics::getOverlap(e, enemy);
+			if (overlap.x > 0 && overlap.y > 0)
+			{
+				if (e->getComponent<CInvincibility>().has) { continue; };
+				e->getComponent<CHealth>().current -= enemy->getComponent<CDamage>().damage;
+				e->addComponent<CInvincibility>((int) 30);
+
+			}
+
+		}
+
+	}
+
+	for (auto e : m_entityManager.getEntities())
+	{
+		if (e->tag() == "tile") { continue; };
+		for (auto t : tiles)
+		{
+			Vec2 overlap = Physics::getOverlap(e, t);
+			if (overlap.x > 0 && overlap.y > 0)  // Ensure valid collision
+			{
+
+				if (t->getComponent<CAnimation>().animation.getName() == "Heart")
+				{
+					std::cout << "heart\n";
+					if (e->hasComponent<CHealth>() && (e->getComponent<CHealth>().current != e->getComponent<CHealth>().max))
+					{
+						e->getComponent<CHealth>().current++;
+						t->destroy();
+					}
+				}
+			}
+
+		}
 	}
 
 	// does not let the player exit the screen to the left
@@ -1055,4 +1112,4 @@ Vec2 Scene_Zelda::windowToWorld(const Vec2& window) const
 	return Vec2(window.x + worldX, window.y + worldY);
 }
 
-//sCollision system
+//black tile teleporting inside sCollision
