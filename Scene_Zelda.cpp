@@ -1,4 +1,5 @@
 #include "Scene_Zelda.h"
+#include <sstream>
 //#include "Common.h"
 #include "Physics.h"
 #include "Assets.h"
@@ -95,10 +96,28 @@ void Scene_Zelda::loadLevel(const std::string& filename)
 
 		}
 		else if (assetType == "NPC") {
+			std::string ai;
 			fin >> m_enemyConfig.NAME >> m_enemyConfig.ROOMX >> m_enemyConfig.ROOMY >> m_enemyConfig.X >> m_enemyConfig.Y >> m_enemyConfig.BLOCKM
 				>> m_enemyConfig.BLOCKV >> m_enemyConfig.HEALTH >> m_enemyConfig.DAMAGE;
+			fin >> ai;
 
-			spawnEnemy();
+			if (ai == "Patrol")
+			{
+				fin >> m_enemyConfig.SPEED;
+				std::vector<Vec2> patrolPoints;
+				float x, y;
+				std::string line;
+				std::getline(fin, line);
+				std::cout << line << "\n";
+				std::istringstream iss(line);
+
+				while (iss >> x >> y) {
+					patrolPoints.emplace_back(
+						getPosition(m_enemyConfig.ROOMX, m_enemyConfig.ROOMY,x, y));
+				}
+				//getPosition(m_enemyConfig.ROOMX, m_enemyConfig.ROOMY,x * m_gridSize.x + m_gridSize.x/2, y * m_gridSize.y + m_gridSize.y / 2));
+				spawnEnemy(patrolPoints);
+			}
 
 		}
 	}
@@ -136,7 +155,6 @@ void Scene_Zelda::spawnPlayer()
 	m_player->addComponent<CBoundingBox>(Vec2(m_playerConfig.CX, m_playerConfig.CY), true, false);
 	m_player->addComponent<CHealth>(m_playerConfig.HEALTH, m_playerConfig.HEALTH);
 }
-
 void Scene_Zelda::spawnSword(std::shared_ptr<Entity> entity)
 {
 	auto sword = m_entityManager.addEntity("sword");
@@ -345,10 +363,7 @@ void Scene_Zelda::sDoAction(const Action& action)
 			//pInput.canAttack = true;
 		}
 	}
-}
 
-void Scene_Zelda::sAI()
-{
 	// TODO
 	// Implement the Enemy AI
 	// Implement Follow behavior
@@ -359,6 +374,33 @@ void Scene_Zelda::sAI()
 		// if they do, do this
 	// for each entity, figure out the line segment ab between the player and the entity
 	//		then, for each entity that blocks vision, call entity intersect on it
+}
+
+void Scene_Zelda::sAI()
+{
+
+	for (auto e : m_entityManager.getEntities())
+	{
+		auto& eTransform = e->getComponent<CTransform>();
+		
+		if (e->hasComponent<CPatrol>())
+		{
+			auto& ePatrol = e->getComponent<CPatrol>();
+			auto patrolPosition = (ePatrol.currentPosition + 1) % ePatrol.positions.size();
+			auto destination = ePatrol.positions.at(patrolPosition);
+			//std::cout << "Patrol Pos: " << patrolPosition << "\n";
+			//std::cout << "Patrol Dest: (" << destination.x << "," << destination.y << ")\n";
+			Vec2 differenceV = eTransform.pos.differenceVec(destination);
+			float length = differenceV.lengthDist();
+			differenceV.vecNorm(length);
+			eTransform.velocity = differenceV * ePatrol.speed;
+
+			if ((eTransform.pos - destination).lengthDist() < 5.0f)
+			{
+				ePatrol.currentPosition++;
+			}
+		}
+	}
 }
 
 void Scene_Zelda::sStatus()
@@ -799,17 +841,25 @@ Vec2 Scene_Zelda::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entit
 
 
 
-void Scene_Zelda::spawnEnemy()
+void Scene_Zelda::spawnEnemy(std::vector<Vec2>& patrolPoints)
 {
 	std::cout << "Spawning Enemy:" << "\n";
+
+	for (auto e : patrolPoints)
+	{
+		std::cout << "(" << e.x << "," << e.y << ")\n";
+	}
 	//here is a sample player entity which you can use to construct other entities
 	auto entity = m_entityManager.addEntity("enemy");
 	entity->addComponent<CAnimation>(m_game->assets().getAnimation("Tektite"), true);
-	entity->addComponent<CTransform>(getPosition(m_enemyConfig.ROOMX, m_enemyConfig.ROOMX,
+	entity->addComponent<CTransform>(getPosition(m_enemyConfig.ROOMX, m_enemyConfig.ROOMY,
 		m_enemyConfig.X, m_enemyConfig.Y));
 	entity->addComponent<CBoundingBox>(m_game->assets().getAnimation("SwordUp").getSize(), m_enemyConfig.BLOCKM, m_enemyConfig.BLOCKV);
 	entity->addComponent<CHealth>(m_enemyConfig.HEALTH, m_enemyConfig.HEALTH);
 	entity->addComponent<CDamage>(m_enemyConfig.DAMAGE);
+	entity->addComponent<CPatrol>(patrolPoints, m_enemyConfig.SPEED);
+	std::cout << "Enemy block Movement? " << m_enemyConfig.BLOCKM <<"\n";
+	std::cout << "Enemy block Vision? " << m_enemyConfig.BLOCKV <<"\n";
 }
 
 
@@ -1060,7 +1110,7 @@ void Scene_Zelda::sRender()
 				if(box.blockMove && box.blockVision) { rect.setOutlineColor(sf::Color::Black); }
 				if (box.blockMove && !box.blockVision) { rect.setOutlineColor(sf::Color::Blue); }
 				if (!box.blockMove && box.blockVision) { rect.setOutlineColor(sf::Color::Red); }
-				if (!box.blockMove && box.blockVision) { rect.setOutlineColor(sf::Color::White); }
+				if (!box.blockMove && !box.blockVision) { rect.setOutlineColor(sf::Color::White); }
 				rect.setOutlineThickness(1);
 				m_game->window().draw(rect);
 			}
@@ -1112,4 +1162,4 @@ Vec2 Scene_Zelda::windowToWorld(const Vec2& window) const
 	return Vec2(window.x + worldX, window.y + worldY);
 }
 
-//black tile teleporting inside sCollision
+//patrol points and enemy spawn

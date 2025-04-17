@@ -30,8 +30,8 @@ Tile RockBM   0 0	7 11 	1 1
 Tile RockBM   0 0	8 11	1 1
 Tile Heart    0 0	10 2	0 0
 
-NPC Tektite   0 0	3 9	0 0 8 1 Patrol 2 2 3 9 7 9
-NPC Tektite   0 0	15 10	0 0 2 1 Patrol 2 4 15 10 15 7 17 7 17 10
+NPC Tektite   0 0	3 9	0 0 8 1 Patrol 2 3 9 7 9
+NPC Tektite   0 0	15 10	0 0 2 1 Patrol 2 15 10 15 7 17 7 17 10
 
 Tile RockBM   0 1	0 0 	1 1
 Tile RockBM   0 1	1 0 	1 1
@@ -121,6 +121,10 @@ Tile Black    1 0	14 3 	0 0
 Tile RockBM   1 0	15 3 	1 1
 Tile RockBR   1 0	16 3	1 1
 Tile Heart    1 0	14 7 	0 0
+
+NPC Tektite   1 0	5 4 	0 1 2 1 Patrol 3	5 4	5 9
+NPC Tektite   1 0	9 9 	0 1 2 1 Patrol 2	9 4	9 9
+NPC Tektite   1 0	7 4 	0 1 2 1 Patrol 1 	7 4	7 9
 
 Tile WaterTL -1 0	2 2	1 0
 Tile WaterTM -1 0	3 2 	1 0

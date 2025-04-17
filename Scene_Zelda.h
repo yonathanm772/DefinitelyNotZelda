@@ -14,7 +14,7 @@ class Scene_Zelda : public Scene
 	};
 
 	struct EnemyConfig {
-		float ROOMX, ROOMY, X, Y, BLOCKM, BLOCKV,HEALTH,DAMAGE;
+		float ROOMX, ROOMY, X, Y, BLOCKM, BLOCKV,HEALTH,DAMAGE,SPEED;
 		std::string NAME;
 	};
 
@@ -41,7 +41,7 @@ protected:
 	Vec2 gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity);
 	void loadLevel(const std::string& filename);
 	void spawnPlayer();
-	void spawnEnemy();
+	void spawnEnemy( std::vector<Vec2>& patrolPoints);
 	void spawnSword(std::shared_ptr<Entity> entity);
 	void hitBlock(std::shared_ptr<Entity> entity);
 	void onEnd();

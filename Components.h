@@ -144,8 +144,6 @@ public:
 	// the index is going to be currentposition + 1 % positions.length();
 	size_t currentPosition = 0;		
 	float speed = 0;
-	//bool isGrounded = false;
-	//bool isRunning = false;
 	CPatrol() = default;
 	CPatrol(std::vector<Vec2>& pos, float s)
 		: positions(pos), speed(s) {}
