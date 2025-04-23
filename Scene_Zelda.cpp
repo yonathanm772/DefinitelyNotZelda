@@ -118,6 +118,12 @@ void Scene_Zelda::loadLevel(const std::string& filename)
 				//getPosition(m_enemyConfig.ROOMX, m_enemyConfig.ROOMY,x * m_gridSize.x + m_gridSize.x/2, y * m_gridSize.y + m_gridSize.y / 2));
 				spawnEnemy(patrolPoints);
 			}
+			else if (ai == "Follow")
+			{
+				std::cout << "Follow Enemy\n";
+				fin >> m_enemyConfig.SPEED;
+				spawnEnemy();
+			}
 
 		}
 	}
@@ -381,10 +387,11 @@ void Scene_Zelda::sAI()
 
 	for (auto e : m_entityManager.getEntities())
 	{
-		auto& eTransform = e->getComponent<CTransform>();
+		
 		
 		if (e->hasComponent<CPatrol>())
 		{
+			auto& eTransform = e->getComponent<CTransform>();
 			auto& ePatrol = e->getComponent<CPatrol>();
 			auto patrolPosition = (ePatrol.currentPosition + 1) % ePatrol.positions.size();
 			auto destination = ePatrol.positions.at(patrolPosition);
@@ -398,6 +405,55 @@ void Scene_Zelda::sAI()
 			if ((eTransform.pos - destination).lengthDist() < 5.0f)
 			{
 				ePatrol.currentPosition++;
+			}
+		}
+		else if (e->hasComponent<CFollowPlayer>())
+		{
+			auto& eTransform = e->getComponent<CTransform>();
+			auto& eFollow = e->getComponent<CFollowPlayer>();
+			auto& destination = m_player->getComponent<CTransform>().pos;
+			Vec2 differenceV = eTransform.pos.differenceVec(destination);
+			float length = differenceV.lengthDist();
+			differenceV.vecNorm(length);
+
+			auto& home = e->getComponent<CFollowPlayer>().home;
+			Vec2 differenceH = eTransform.pos.differenceVec(home);
+			float length2 = differenceH.lengthDist();
+			differenceH.vecNorm(length2);
+			
+
+			bool visionBlocked = false;
+
+			for (auto n : m_entityManager.getEntities())
+			{
+				if (!n->hasComponent<CBoundingBox>()) continue;
+
+				if (n->getComponent<CBoundingBox>().blockVision)
+				{
+					if (Physics::entityIntersect(m_player->getComponent<CTransform>().pos,
+						e->getComponent<CTransform>().pos,
+						n))
+					{
+						visionBlocked = true;
+						break;
+					}
+				}
+			}
+
+			if (visionBlocked)
+			{
+				std::cout << "BLOCKING VISION\n";
+				std::cout << e->getComponent<CFollowPlayer>().home.x << ", " << e->getComponent<CFollowPlayer>().home.y << "\n";
+				eTransform.velocity = differenceH * eFollow.speed;
+
+				if ((eTransform.pos - home).lengthDist() < 5.0f)
+				{
+					eTransform.velocity = { 0,0 };
+				}
+			}
+			else
+			{
+				eTransform.velocity = differenceV * eFollow.speed;
 			}
 		}
 	}
@@ -841,14 +897,9 @@ Vec2 Scene_Zelda::gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entit
 
 
 
-void Scene_Zelda::spawnEnemy(std::vector<Vec2>& patrolPoints)
+void Scene_Zelda::spawnEnemy(std::vector<Vec2> patrolPoints)
 {
 	std::cout << "Spawning Enemy:" << "\n";
-
-	for (auto e : patrolPoints)
-	{
-		std::cout << "(" << e.x << "," << e.y << ")\n";
-	}
 	//here is a sample player entity which you can use to construct other entities
 	auto entity = m_entityManager.addEntity("enemy");
 	entity->addComponent<CAnimation>(m_game->assets().getAnimation("Tektite"), true);
@@ -857,9 +908,17 @@ void Scene_Zelda::spawnEnemy(std::vector<Vec2>& patrolPoints)
 	entity->addComponent<CBoundingBox>(m_game->assets().getAnimation("SwordUp").getSize(), m_enemyConfig.BLOCKM, m_enemyConfig.BLOCKV);
 	entity->addComponent<CHealth>(m_enemyConfig.HEALTH, m_enemyConfig.HEALTH);
 	entity->addComponent<CDamage>(m_enemyConfig.DAMAGE);
-	entity->addComponent<CPatrol>(patrolPoints, m_enemyConfig.SPEED);
-	std::cout << "Enemy block Movement? " << m_enemyConfig.BLOCKM <<"\n";
-	std::cout << "Enemy block Vision? " << m_enemyConfig.BLOCKV <<"\n";
+
+	auto& home = entity->getComponent<CTransform>().pos;
+	if (!patrolPoints.empty())
+	{
+		entity->addComponent<CPatrol>(patrolPoints, m_enemyConfig.SPEED);
+	}
+	else
+	{
+		std::cout << "Spawning Follow:" << "\n";
+		entity->addComponent<CFollowPlayer>(home,m_enemyConfig.SPEED);
+	}
 }
 
 

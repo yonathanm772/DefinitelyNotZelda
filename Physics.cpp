@@ -88,7 +88,19 @@ Vec2 Physics::getPreviousOverlap(std::shared_ptr<Entity> a, std::shared_ptr<Enti
 
 Intersect Physics::LineIntersect(const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d)
 {
-	return { false, Vec2(0,0) };
+	Vec2 r = (b - a);
+	Vec2 s = (d - c);
+	float rxs = r.cross(s);
+	Vec2 cma = c - a;
+	float t = (cma.cross(s)) / rxs;
+	float u = (cma.cross(r)) / rxs;
+
+	if (t >= 0 && t <= 1 && u >= 0 && u <= 1)
+	{
+		return { true, Vec2(a.x + t * r.x, a.y + t * r.y) };
+	}
+	else
+		return { false, Vec2(0,0) };
 }
  
 bool Physics::IsInside(const Vec2& pos, std::shared_ptr<Entity> e)
@@ -123,17 +135,20 @@ bool Physics::entityIntersect(const Vec2& a, const Vec2& b, std::shared_ptr<Enti
 	//		2. does the line segment player/endity(ab) instersect with (e2,e3) right of the blocking entity
 	//		3. does the line segment player/endity(ab) instersect with (e3,e4) bottom of the blocking entity
 	//		4. does the line segment player/endity(ab) instersect with (e4,e1) left of the blocking entity
+	auto& eBoundingBox = e->getComponent<CBoundingBox>();
+	auto& eTransform = e->getComponent<CTransform>().pos;
 
-	Vec2 e1;
-	Vec2 e2;
-	Vec2 e3;
-	Vec2 e4;
+	//std::cout << "E1: (" << eBoundingBox.halfSize.x << ", " << eBoundingBox.halfSize.y << ")\n";
+	Vec2 topLeft = eTransform - eBoundingBox.halfSize;
+	Vec2 topRight = { eTransform.x + eBoundingBox.halfSize.x, eTransform.y - eBoundingBox.halfSize.y };
+	Vec2 bottomLeft = { eTransform.x - eBoundingBox.halfSize.x, eTransform.y + eBoundingBox.halfSize.y };
+	Vec2 bottomRight = eTransform + eBoundingBox.halfSize;
 
-	/*if (LineIntersect(a, b, e1, e2)) { return true };
-	if (LineIntersect(a, b, e2, e3)) { return true };
-	if (LineIntersect(a, b, e3, e4)) { return true };
-	if (LineIntersect(a, b, e4, e1)) { return true };
-	*/
+	if (LineIntersect(a, b, topLeft, topRight).result) { return true; };
+	if (LineIntersect(a, b, topRight, bottomRight).result) { return true; };
+	if (LineIntersect(a, b, bottomRight, bottomLeft).result) { return true; };
+	if (LineIntersect(a, b, bottomLeft, topLeft).result) { return true; };
+	
 	//if any of the above are true, then return true
 	return false;
 }

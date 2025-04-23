@@ -27,6 +27,8 @@ public:
 	void vecNorm(const float val);  
 	float angle(const Vec2& differenceV);
 
+	float cross(const Vec2& v);
+
 
 	Vec2 velocity(const int speed, const float angle);
 };

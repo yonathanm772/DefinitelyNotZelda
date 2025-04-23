@@ -128,8 +128,6 @@ class CFollowPlayer : public Component
 public:
 	Vec2 home = { 0, 0 };
 	float speed = 0.0f;
-	//bool isGrounded = false;
-	//bool isRunning = false;
 	CFollowPlayer() = default;
 	CFollowPlayer(Vec2 p, float s)
 		: home(p), speed(s) {}

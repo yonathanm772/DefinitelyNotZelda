@@ -97,6 +97,11 @@ float Vec2::angle(const Vec2& differenceV)
 	return atan2f(differenceV.y, differenceV.x);
 }
 
+float Vec2::cross(const Vec2& b)
+{
+	return (x * b.y) - (y * b.x);
+}
+
 Vec2 Vec2::velocity(const int speed, const float angleInDegrees)
 {
 	// Convert angle from degrees to radians

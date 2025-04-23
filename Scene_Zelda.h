@@ -41,7 +41,7 @@ protected:
 	Vec2 gridToMidPixel(float gridX, float gridY, std::shared_ptr<Entity> entity);
 	void loadLevel(const std::string& filename);
 	void spawnPlayer();
-	void spawnEnemy( std::vector<Vec2>& patrolPoints);
+	void spawnEnemy(std::vector<Vec2> patrolPoints = {});
 	void spawnSword(std::shared_ptr<Entity> entity);
 	void hitBlock(std::shared_ptr<Entity> entity);
 	void onEnd();
