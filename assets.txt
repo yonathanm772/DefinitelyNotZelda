@@ -47,6 +47,7 @@ Animation	StandUp		TexStandU	1	0
 Animation	Tektite		TexTektite	2	10
 Animation	Knight		TexKnight	2	10
 Animation	AtkUp		TexAtkUp	1	0
+Animation	Get2		TexGet2		1	0
 Animation	AtkDown		TexAtkDown	1	0
 Animation	AtkRight	TexAtkRight	1	0
 Animation	SwordUp		TexSwordUp	1	0

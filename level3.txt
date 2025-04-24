@@ -30,8 +30,10 @@ Tile RockBM   0 0	7 11 	1 1
 Tile RockBM   0 0	8 11	1 1
 Tile Heart    0 0	10 2	0 0
 
+
 NPC Tektite   0 0	3 9	0 0 8 1 Patrol 2 3 9 7 9
 NPC Tektite   0 0	15 10	0 0 2 1 Patrol 2 15 10 15 7 17 7 17 10
+NPC Knight    0 0	16 6	0 0 5 2 Follow 1
 
 Tile RockBM   0 1	0 0 	1 1
 Tile RockBM   0 1	1 0 	1 1
@@ -107,6 +109,11 @@ Tile RockBM   0 -1	8 9 	1 1
 Tile Heart    0 -1	4 3 	0 0				
 Tile Heart    0 -1	12 4	0 0
 
+NPC  Tektite  0 -1	6 2 	0 0 2 1 Follow 3
+NPC  Tektite  0 -1	8 2 	0 0 2 1 Follow 3
+NPC  Tektite  0 -1	10 2 	0 0 2 1 Follow 3
+
+
 Tile RockTL   1 0	12 2	1 1
 Tile RockTL   1 0	13 1	1 1
 Tile RockTM   1 0	14 1	1 1
@@ -122,10 +129,11 @@ Tile RockBM   1 0	15 3 	1 1
 Tile RockBR   1 0	16 3	1 1
 Tile Heart    1 0	14 7 	0 0
 
-NPC Tektite   1 0	18 7 	0 0 2 1 Follow 2
+
 NPC Tektite   1 0	5 4 	0 1 2 1 Patrol 3	5 4	5 9
 NPC Tektite   1 0	9 9 	0 1 2 1 Patrol 2	9 4	9 9
 NPC Tektite   1 0	7 4 	0 1 2 1 Patrol 1 	7 4	7 9
+NPC Tektite   1 0	18 7 	0 0 2 1 Follow 2
 
 Tile WaterTL -1 0	2 2	1 0
 Tile WaterTM -1 0	3 2 	1 0
@@ -148,5 +156,8 @@ Tile WaterMR -1 0	4 7 	1 0
 Tile WaterBL -1 0	2 8 	1 0
 Tile WaterBM -1 0	3 8 	1 0
 Tile WaterBR -1 0	4 8 	1 0
+NPC  Tektite -1 0	1 4	0 0 2 1 Follow 2
+
+
 	
 Player 0 0 12 6 48 48 5 3

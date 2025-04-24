@@ -23,9 +23,8 @@ void Scene_Menu::init()
 	m_levelPaths = { "level1", "level2", "level3" };
 	m_menuFont = m_game->assets().getFont("Megaman");
 
-	
-	//m_menuSound = m_game->assets().getSound("MusicTitle");
-	//m_game->playSound("MusicTitle");
+
+	m_game->playSound("MusicTitle");
 
 	sf::Text textTitle;
 	textTitle.setFont(m_menuFont);
@@ -98,6 +97,7 @@ void Scene_Menu::sDoAction(const Action& action)
 			
 			m_game->changeScene("PLAY", std::make_shared<Scene_Zelda>(m_game, m_levelPaths[m_selectedMenuIndex] + ".txt"), true);
 			m_hasEnded = true;
+			m_game->stopSound("MusicTitle");
 			
 		}
 		else if (action.name() == "QUIT")
@@ -125,8 +125,4 @@ void Scene_Menu::sRender()
 		m_game->window().draw(text);
 	}
 
-	// changing scenes https://github.com/eXpl0it3r/SmallGameEngine/blob/master/src/MenuState.cpp
 }
-
-// play sound music
-// implement movement

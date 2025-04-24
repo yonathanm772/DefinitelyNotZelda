@@ -68,7 +68,7 @@ const Animation& Assets::getAnimation(std::string name) const
     return m_animationsMap.at(name);
 }
 
-sf::Sound& Assets::getSound(std::string soundName)
+sf::Sound& Assets::getSound(const std::string& soundName)
 {
     return m_soundMap.at(soundName);
 }

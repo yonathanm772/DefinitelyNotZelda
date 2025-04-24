@@ -1,15 +1,12 @@
 #include "Scene_Zelda.h"
 #include <sstream>
-//#include "Common.h"
 #include "Physics.h"
 #include "Assets.h"
 #include "GameEngine.h"
 #include "Components.h"
-//#include "Action.h"
 
 #include <fstream>
 #include <iostream>
-//#include "Scene_Menu.h"
 
 
 Scene_Zelda::Scene_Zelda()
@@ -44,10 +41,7 @@ void Scene_Zelda::init(const std::string& levelPath)
 
 	m_gridText.setCharacterSize(12);
 	m_gridText.setFont(m_game->assets().getFont("Tech"));
-	std::cout << "Window Pos" << m_game->window().getPosition().x << "\n";
-	std::cout << "Window Pos" << m_game->window().getPosition().y << "\n";
-	std::cout << "Window Size" << m_game->window().getSize().x << "\n";
-	std::cout << "Window Size" << m_game->window().getSize().y << "\n";
+
 
 	
 	
@@ -57,11 +51,8 @@ void Scene_Zelda::init(const std::string& levelPath)
 
 void Scene_Zelda::loadLevel(const std::string& filename)
 {
-
+	m_game->playSound("MusicPlay");
 	m_entityManager = EntityManager();
-	//TODO:
-	// Use the getPosition() function below to convert room-tile coords to game world coords 
-	// similar to midToGridPixel
 	
 	std::cout << "Loading From File" << "\n";
 
@@ -82,7 +73,6 @@ void Scene_Zelda::loadLevel(const std::string& filename)
 			fin >> asset >> roomX >> roomY >> posX >> posY >> blocksM >> blocksV;
 
 			auto tile = m_entityManager.addEntity("tile");
-			//IMPORTANT: always add the CAnimation component first so that gridToMidPixel can compute correctly
 			tile->addComponent<CAnimation>(m_game->assets().getAnimation(asset), true);
 			tile->addComponent<CTransform>(getPosition(roomX,roomY,posX,posY));
 			tile->addComponent<CBoundingBox>(m_game->assets().getAnimation(asset).getSize(), blocksM, blocksV);
@@ -115,12 +105,10 @@ void Scene_Zelda::loadLevel(const std::string& filename)
 					patrolPoints.emplace_back(
 						getPosition(m_enemyConfig.ROOMX, m_enemyConfig.ROOMY,x, y));
 				}
-				//getPosition(m_enemyConfig.ROOMX, m_enemyConfig.ROOMY,x * m_gridSize.x + m_gridSize.x/2, y * m_gridSize.y + m_gridSize.y / 2));
 				spawnEnemy(patrolPoints);
 			}
 			else if (ai == "Follow")
 			{
-				std::cout << "Follow Enemy\n";
 				fin >> m_enemyConfig.SPEED;
 				spawnEnemy();
 			}
@@ -187,9 +175,8 @@ void Scene_Zelda::spawnSword(std::shared_ptr<Entity> entity)
 	sword->addComponent<CBoundingBox>(m_game->assets().getAnimation("SwordUp").getSize());
 	sword->addComponent<CLifespan>(15, (int)m_currentFrame);
 	sword->addComponent<CDamage>(1);
+	m_game->playSound("Slash");
 
-	// Play slash sound
-	//m_game->playSound("Slash");
 }
 
 void Scene_Zelda::update()
@@ -388,7 +375,7 @@ void Scene_Zelda::sAI()
 	for (auto e : m_entityManager.getEntities())
 	{
 		
-		
+		if (e->tag() == "player") { continue; };
 		if (e->hasComponent<CPatrol>())
 		{
 			auto& eTransform = e->getComponent<CTransform>();
@@ -442,7 +429,6 @@ void Scene_Zelda::sAI()
 
 			if (visionBlocked)
 			{
-				std::cout << "BLOCKING VISION\n";
 				std::cout << e->getComponent<CFollowPlayer>().home.x << ", " << e->getComponent<CFollowPlayer>().home.y << "\n";
 				eTransform.velocity = differenceH * eFollow.speed;
 
@@ -491,7 +477,7 @@ void Scene_Zelda::sCollision()
 	auto& tiles = m_entityManager.getEntities("tile");
 	auto& enemies = m_entityManager.getEntities("enemy");
 	auto& swords = m_entityManager.getEntities("sword");
-
+	auto& currentAnimation = m_player->getComponent<CAnimation>();
 	auto& transform = m_player->getComponent<CTransform>();
 	auto& state = m_player->getComponent<CState>();
 
@@ -507,13 +493,15 @@ void Scene_Zelda::sCollision()
 			{
 				enemy->getComponent<CHealth>().current -= sword->getComponent<CDamage>().damage;
 				sword->removeComponent<CDamage>();
+				m_game->playSound("EnemyHit");
 
-				if (enemy->getComponent<CAnimation>().animation.getName() == "Tektite" && enemy->getComponent<CHealth>().current <= 0)
+				if (enemy->hasComponent<CAnimation>() && enemy->getComponent<CHealth>().current <= 0)
 				{
 					enemy->addComponent<CAnimation>(m_game->assets().getAnimation("Explosion"), true);
 					enemy->removeComponent<CHealth>();
 					enemy->removeComponent<CBoundingBox>();
 					enemy->getComponent<CAnimation>().repeat = false;
+					m_game->playSound("EnemyDie");
 				}
 
 			}
@@ -537,27 +525,35 @@ void Scene_Zelda::sCollision()
 			{
 				isColliding = true;  // Player is colliding with at least one tile
 				
-				/*if (t->getComponent<CAnimation>().animation.getName() == "Black")
+				if (t->getComponent<CAnimation>().animation.getName() == "Black")
 				{
-					auto &currentTilePos = t->getComponent<CTransform>().pos;
-					//auto& destination = m_entityManager.getEntities(t->getComponent<CAnimation>().animation.getName());
+					auto& currentTilePos = t->getComponent<CTransform>().pos;
+
+					// Step 1: Gather all possible destinations
+					std::vector<std::shared_ptr<Entity>> destinations;
 
 					for (auto d : tiles)
 					{
-						//std::cout << "Tile:" << d-> << "\n";
-						if (d == t) continue; // skip the current tile
+						if (d == t) continue; // Skip the tile you're standing on
 						if (d->getComponent<CAnimation>().animation.getName() == "Black")
 						{
-							auto& destPos = d->getComponent<CTransform>().pos;
-
-							// Optional: Add a cooldown so you don't instantly teleport back
-							transform.pos = destPos;
-							std::cout << "Teleported to tile at " << destPos.x << ", " << destPos.y << "\n";
-							return; // Exit early so you don’t double-teleport in the same frame
+							destinations.push_back(d);
 						}
 					}
-				
-				}*/
+
+					// Step 2: Pick one at random
+					if (!destinations.empty())
+					{
+						int index = rand() % destinations.size(); // random index
+						auto& destPos = destinations[index]->getComponent<CTransform>().pos;
+
+						// Optional offset to prevent immediate re-teleporting
+						transform.pos = destPos;
+						transform.pos.y += m_gridSize.y * 1.1f;
+
+						std::cout << "Teleported to tile at " << destPos.x << ", " << destPos.y << "\n";
+					}
+				}
 
 				if (!block.blockMove) { continue; }
 				// Handle different collision directions
@@ -577,17 +573,15 @@ void Scene_Zelda::sCollision()
 				{
 					transform.pos.y += overlap.y;
 					transform.velocity.y = 0;
-					std::cout << "Velocity in Top collision " << transform.velocity.y << "\n";
 
 				}
 				// if there was a non-zero previous X overlap, the the collision came from x
 				else if (prevOverlap.y > 0)
 				{
-					std::cout << "Horizontal\n";
 					shift.x += diff.x > 0 ? overlap.x : -overlap.x;
 
 					transform.velocity.x = 0;
-					std::cout << "Velocity in Side collision " << transform.velocity.x << "\n";
+					
 
 				}
 				transform.pos += shift;
@@ -604,6 +598,13 @@ void Scene_Zelda::sCollision()
 				if (e->getComponent<CInvincibility>().has) { continue; };
 				e->getComponent<CHealth>().current -= enemy->getComponent<CDamage>().damage;
 				e->addComponent<CInvincibility>((int) 30);
+				m_game->playSound("LinkHurt");
+				if (e->getComponent<CHealth>().current <= 0)
+				{
+					m_game->playSound("LinkDie");
+					//spawnPlayer();
+					loadLevel(m_levelPath);
+				}
 
 			}
 
@@ -625,6 +626,7 @@ void Scene_Zelda::sCollision()
 					std::cout << "heart\n";
 					if (e->hasComponent<CHealth>() && (e->getComponent<CHealth>().current != e->getComponent<CHealth>().max))
 					{
+						m_game->playSound("GetItem");
 						e->getComponent<CHealth>().current++;
 						t->destroy();
 					}
@@ -634,6 +636,56 @@ void Scene_Zelda::sCollision()
 		}
 	}
 
+	for (auto e : m_entityManager.getEntities("enemy"))
+	{
+		bool isColliding = false;  // Track if the player collides with any tile
+		auto& eTransform = e->getComponent<CTransform>();
+
+		for (auto t : tiles)
+		{
+			Vec2 overlap = Physics::getOverlap(e, t);
+			Vec2 prevOverlap = Physics::getPreviousOverlap(e, t);
+
+			Vec2 shift(0, 0);  // Position correction
+			Vec2 diff = eTransform.pos - t->getComponent<CTransform>().pos; // Difference in position
+			auto& block = t->getComponent<CBoundingBox>();
+			if (overlap.x > 0 && overlap.y > 0)  // Ensure valid collision
+			{
+				isColliding = true;  // Player is colliding with at least one tile
+
+				if (!block.blockMove) { continue; }
+				// Handle different collision directions
+				// bottom collision
+				if (prevOverlap.x > 0 && eTransform.prevPos.y < t->getComponent<CTransform>().prevPos.y)
+				{
+
+					eTransform.pos.y -= overlap.y;
+					eTransform.velocity.y = 0;
+					std::cout << "Velocity in Bottom collision " << eTransform.velocity.y << "\n";
+
+				}
+				//top collision
+				else if (prevOverlap.x > 0 && eTransform.prevPos.y > t->getComponent<CTransform>().prevPos.y)
+				{
+					eTransform.pos.y += overlap.y;
+					eTransform.velocity.y = 0;
+					std::cout << "Velocity in Top collision " << eTransform.velocity.y << "\n";
+
+				}
+				// if there was a non-zero previous X overlap, the the collision came from x
+				else if (prevOverlap.y > 0)
+				{
+					std::cout << "Horizontal\n";
+					shift.x += diff.x > 0 ? overlap.x : -overlap.x;
+
+					eTransform.velocity.x = 0;
+					std::cout << "Velocity in Side collision " << eTransform.velocity.x << "\n";
+
+				}
+				eTransform.pos += shift;
+			}
+		}
+	}
 	// does not let the player exit the screen to the left
 	/*if (m_player->getComponent<CTransform>().pos.x < m_player->getComponent<CBoundingBox>().halfSize.x)
 	{
@@ -902,7 +954,14 @@ void Scene_Zelda::spawnEnemy(std::vector<Vec2> patrolPoints)
 	std::cout << "Spawning Enemy:" << "\n";
 	//here is a sample player entity which you can use to construct other entities
 	auto entity = m_entityManager.addEntity("enemy");
-	entity->addComponent<CAnimation>(m_game->assets().getAnimation("Tektite"), true);
+	if (m_enemyConfig.NAME == "Tektite")
+	{
+		entity->addComponent<CAnimation>(m_game->assets().getAnimation("Tektite"), true);
+	}
+	else
+	{
+		entity->addComponent<CAnimation>(m_game->assets().getAnimation("Knight"), true);
+	}
 	entity->addComponent<CTransform>(getPosition(m_enemyConfig.ROOMX, m_enemyConfig.ROOMY,
 		m_enemyConfig.X, m_enemyConfig.Y));
 	entity->addComponent<CBoundingBox>(m_game->assets().getAnimation("SwordUp").getSize(), m_enemyConfig.BLOCKM, m_enemyConfig.BLOCKV);
@@ -921,55 +980,6 @@ void Scene_Zelda::spawnEnemy(std::vector<Vec2> patrolPoints)
 	}
 }
 
-
-/*
-void Scene_Zelda::SpawnBullet(std::shared_ptr<Entity> entity)
-{
-		
-		auto b = m_entityManager.addEntity("bullet");
-		auto& transform = entity->getComponent<CTransform>();
-		auto& boundingBox = entity->getComponent<CBoundingBox>();
-
-		b->addComponent<CTransform>(transform.pos, Vec2(transform.scale.x * 12, 0), transform.scale,0);
-		b->addComponent<CAnimation>(m_game->assets().getAnimation(m_playerConfig.WEAPON), true);
-		b->addComponent<CBoundingBox>(m_game->assets().getAnimation(m_playerConfig.WEAPON).getSize()/2);
-		b->addComponent<CLifespan>(60,(int)m_currentFrame);
-
-auto b = m_entityManager.addEntity("bullet");
-		auto& transform = entity->getComponent<CTransform>();
-		auto& boundingBox = entity->getComponent<CBoundingBox>();
-
-		b->addComponent<CTransform>(transform.pos, Vec2(transform.scale.x * 12, 0), transform.scale,0);
-		b->addComponent<CAnimation>(m_game->assets().getAnimation(m_playerConfig.WEAPON), true);
-		b->addComponent<CBoundingBox>(m_game->assets().getAnimation(m_playerConfig.WEAPON).getSize()/2);
-		b->addComponent<CLifespan>(60,(int)m_currentFrame)
-*/
-/*void Scene_Zelda::hitBlock(std::shared_ptr<Entity> entity)
-{
-	// Ensure the block has an animation component
-	if (!entity->hasComponent<CAnimation>())
-		return;
-
-	auto& animation = entity->getComponent<CAnimation>();
-
-	if (animation.animation.getName() == "Brick")
-	{
-		entity->addComponent<CAnimation>(m_game->assets().getAnimation("Explosion"), true);
-		entity->removeComponent<CBoundingBox>();
-		animation.repeat = false;
-	}
-	else if (animation.animation.getName() == "Question")
-	{
-
-		auto coin = m_entityManager.addEntity("coin");
-		coin->addComponent<CAnimation>(m_game->assets().getAnimation("Coin"), true);
-		coin->addComponent<CTransform>(entity->getComponent<CTransform>().pos + Vec2(0, -64)); // Position coin above the block
-		coin->addComponent<CLifespan>(30, (int)m_currentFrame); // Destroy the coin after 1 second
-
-		entity->addComponent<CAnimation>(m_game->assets().getAnimation("Question2"), true);
-		
-	}
-}*/
 
 void Scene_Zelda::sLifespan()
 {
@@ -1046,7 +1056,7 @@ void Scene_Zelda::sRender()
 	if (!m_paused)
 		m_game->window().clear(sf::Color(255, 192, 122));
 	else
-		m_game->window().clear(sf::Color(100, 100, 255));
+		m_game->window().clear(sf::Color(200, 192, 122));
 
 	// set the viewport of the window to be cented on the player if its far enough right
 	/*auto& pPos = m_player->getComponent<CTransform>().pos;
@@ -1221,4 +1231,4 @@ Vec2 Scene_Zelda::windowToWorld(const Vec2& window) const
 	return Vec2(window.x + worldX, window.y + worldY);
 }
 
-//patrol points and enemy spawn
+//do enemy/tile collision

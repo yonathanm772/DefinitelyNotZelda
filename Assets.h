@@ -29,7 +29,7 @@ public:
 
 	const sf::Texture& getTexture(std::string name) const;
 	const Animation& getAnimation(std::string name) const;
-	sf::Sound& getSound(std::string soundName);
+	sf::Sound& getSound(const std::string& soundName);
 	const sf::Font& getFont(std::string name) const;
 	void loadFromFile(const std::string& path);
 };

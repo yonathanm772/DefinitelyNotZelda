@@ -10,6 +10,7 @@ Texture		TexAtkDown	images/tloz/attack_down.png
 Texture		TexAtkUp	images/tloz/attack_up.png
 Texture		TexSwordUp	images/tloz/item_sword_up.png
 Texture		TexSwordRight	images/tloz/item_sword_right.png
+Texture		TexGet2		images/tloz/get2.png
 Texture		TexRockTL	images/tloz/green/tile_rock_tl.png
 Texture		TexRockTM	images/tloz/green/tile_rock_tm.png
 Texture		TexRockTR	images/tloz/green/tile_rock_tr.png
@@ -34,6 +35,7 @@ Texture		TexTreeBR	images/tloz/green/tile_tree_br.png
 Texture		TexBlack	images/tloz/tile_black.png
 Texture		TexHeart	images/tloz/item_heart.png
 Texture		TexTektite	images/tloz/tektite.png
+Texture		TexKnight	images/tloz/knight.png
 Animation	Explosion	TexExplode	7	2
 Animation	StandDown	TexStandD	1	0
 Animation	StandRight	TexStandR	1	0
@@ -42,6 +44,8 @@ Animation	RunDown		TexRunDown	2	15
 Animation	RunRight	TexRunRight	2	15
 Animation	RunUp		TexRunUp	2	15
 Animation	Tektite		TexTektite	2	10
+Animation	Knight		TexKnight	2	10
+Animation	Get2		TexGet2		1	0
 Animation	AtkUp		TexAtkUp	1	0
 Animation	AtkDown		TexAtkDown	1	0
 Animation	AtkRight	TexAtkRight	1	0
@@ -71,6 +75,13 @@ Animation	TreeTR		TexTreeTR	1	0
 Animation	TreeBL		TexTreeBL	1	0
 Animation	TreeBR		TexTreeBR	1	0
 Sound		MusicTitle	sounds/title.ogg
+Sound		MusicPlay	sounds/music.ogg
+Sound		Slash		sounds/LOZ_Sword_Slash.wav
+Sound		LinkHurt	sounds/LOZ_Link_Hurt.wav
+Sound		LinkDie		sounds/LOZ_Link_Die.wav
+Sound		EnemyHit	sounds/LOZ_Enemy_Hit.wav
+Sound		EnemyDie	sounds/LOZ_Enemy_Die.wav
+Sound		GetItem		sounds/LOZ_Get_Item.wav
 Font		Mario		fonts/mario.ttf
 Font 		Megaman		fonts/megaman.ttf
 Font 		Tech		fonts/tech.ttf
